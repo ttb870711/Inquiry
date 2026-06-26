@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>梅酒訂單</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg: #faf7f2;
+    --card: #ffffff;
+    --tea: #6b4c2a;
+    --tea-pale: #f2e8d9;
+    --tea-mid: #c49a6c;
+    --ink: #1e1a16;
+    --muted: #a0927e;
+    --line: #e8dfd0;
+    --green: #4a7c59;
+    --accent: #8a5c2e;
+  }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'PingFang TC','Noto Sans TC','Microsoft JhengHei',sans-serif;
+    padding: 16px 14px 60px;
+    max-width: 430px;
+    margin: 0 auto;
+  }
+
+  /* ── Header ── */
+  header { text-align:center; margin-bottom:18px; }
+  header h1 { font-size:19px; font-weight:800; color:var(--tea); letter-spacing:.08em; }
+  header p  { font-size:11px; color:var(--muted); margin-top:3px; }
+
+  /* ── 收件人卡片 ── */
+  .recipient-card {
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 14px 10px;
+    margin-bottom:16px;
+  }
+  .recipient-card .card-title {
+    font-size:12px; font-weight:700; letter-spacing:.1em;
+    color:var(--tea-mid); margin-bottom:10px;
+  }
+  .field-row {
+    display:flex; align-items:center; gap:8px;
+    padding:6px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .field-row:last-child { border-bottom:none; padding-bottom:0; }
+  .field-label {
+    font-size:13px; font-weight:600; color:var(--ink);
+    white-space:nowrap; min-width:72px;
+  }
+  .field-input {
+    flex:1; border:none; background:transparent;
+    font-size:14px; font-family:inherit; color:var(--ink);
+    outline:none; padding:2px 0;
+  }
+  .field-input::placeholder { color:#ccc; }
+
+  /* ── Tab ── */
+  .tabs {
+    display:flex; gap:8px; margin-bottom:14px;
+  }
+  .tab-btn {
+    flex:1; padding:11px 6px;
+    border:1.5px solid var(--line);
+    border-radius:12px;
+    background:var(--card);
+    font-size:14px; font-weight:700; font-family:inherit;
+    color:var(--muted); cursor:pointer;
+    transition:all .18s;
+  }
+  .tab-btn.active {
+    background:var(--tea);
+    border-color:var(--tea);
+    color:#fff;
+  }
+
+  /* ── 群組標題 ── */
+  .group-label {
+    font-size:10px; font-weight:700; letter-spacing:.14em;
+    color:var(--tea-mid);
+    padding:3px 4px 7px;
+    margin-top:16px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:8px;
+  }
+  .group-label:first-child { margin-top:0; }
+
+  .items-wrap { display:flex; flex-direction:column; gap:7px; margin-bottom:4px; }
+
+  /* ── 品項列（計數器）── */
+  .item-row {
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:11px;
+    padding:9px 12px;
+    display:flex; align-items:center;
+    justify-content:space-between; gap:10px;
+    transition:border-color .18s;
+  }
+  .item-row.active { border-color:var(--tea-mid); background:#fffdf9; }
+  .item-name { font-size:14px; font-weight:600; color:var(--ink); flex:1; }
+
+  .counter {
+    display:flex; align-items:center;
+    background:var(--tea-pale); border-radius:100px; overflow:hidden;
+  }
+  .counter-btn {
+    width:38px; height:38px; border:none; background:transparent;
+    font-size:21px; font-weight:300; color:var(--tea);
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    user-select:none; transition:background .12s; flex-shrink:0;
+  }
+  .counter-btn:active { background:rgba(107,76,42,.18); }
+  .counter-input {
+    width:42px; height:38px; border:none; background:transparent;
+    font-size:16px; font-weight:700; color:var(--tea);
+    text-align:center; font-family:inherit; outline:none; padding:0;
+    -moz-appearance:textfield;
+  }
+  .counter-input::-webkit-outer-spin-button,
+  .counter-input::-webkit-inner-spin-button { -webkit-appearance:none; }
+  .counter-input.zero { color:var(--muted); font-weight:400; }
+
+  /* ── 雙入禮盒區 ── */
+  .dual-section {
+    background:var(--card);
+    border:1.5px solid var(--tea-pale);
+    border-radius:14px;
+    padding:14px;
+    margin-top:16px;
+  }
+  .dual-title {
+    font-size:13px; font-weight:700; color:var(--tea);
+    margin-bottom:12px; display:flex; align-items:center; gap:6px;
+  }
+  .dual-title .badge {
+    font-size:10px; background:var(--tea-pale); color:var(--tea-mid);
+    padding:2px 7px; border-radius:20px; font-weight:600;
+  }
+
+  /* 每一組雙入 */
+  .dual-set {
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 12px;
+    margin-bottom:8px;
+  }
+  .dual-set-header {
+    font-size:11px; font-weight:700; color:var(--muted);
+    margin-bottom:8px; letter-spacing:.06em;
+  }
+  .flavor-grid {
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:6px;
+  }
+  .flavor-chip {
+    display:flex; align-items:center; gap:6px;
+    background:var(--card);
+    border:1.5px solid var(--line);
+    border-radius:8px;
+    padding:7px 10px;
+    cursor:pointer;
+    font-size:13px; font-weight:600; color:var(--ink);
+    transition:all .15s;
+    user-select:none;
+  }
+  .flavor-chip.selected {
+    border-color:var(--tea);
+    background:var(--tea-pale);
+    color:var(--tea);
+  }
+  .flavor-chip .chk {
+    width:16px; height:16px;
+    border:1.5px solid var(--line);
+    border-radius:4px;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; font-size:11px;
+    transition:all .15s;
+  }
+  .flavor-chip.selected .chk {
+    background:var(--tea); border-color:var(--tea); color:#fff;
+  }
+
+  .dual-set-footer {
+    margin-top:8px;
+    font-size:11px; color:var(--muted);
+  }
+  .dual-set-footer span.ok { color:var(--green); font-weight:700; }
+  .dual-set-footer span.warn { color:#c0392b; font-weight:700; }
+
+  .add-dual-btn {
+    width:100%; padding:10px;
+    border:1.5px dashed var(--tea-mid);
+    border-radius:10px;
+    background:transparent;
+    font-size:13px; font-weight:700; font-family:inherit;
+    color:var(--tea-mid); cursor:pointer;
+    transition:all .15s; margin-top:4px;
+  }
+  .add-dual-btn:active { background:var(--tea-pale); }
+
+  .remove-set-btn {
+    float:right; background:none; border:none;
+    font-size:18px; color:#ccc; cursor:pointer;
+    line-height:1; padding:0 2px;
+  }
+  .remove-set-btn:active { color:#c0392b; }
+
+  /* ── 底部按鈕 ── */
+  .actions { margin-top:22px; display:flex; flex-direction:column; gap:9px; }
+  .generate-btn {
+    width:100%; padding:15px;
+    background:var(--tea); color:#fff; border:none;
+    border-radius:14px; font-size:16px; font-weight:700;
+    font-family:inherit; letter-spacing:.06em;
+    cursor:pointer; transition:all .15s;
+  }
+  .generate-btn:active { background:#4e3520; transform:scale(.98); }
+  .reset-btn {
+    width:100%; padding:12px;
+    background:transparent; color:var(--muted);
+    border:1px solid var(--line); border-radius:14px;
+    font-size:13px; font-weight:500; font-family:inherit;
+    cursor:pointer; transition:all .15s;
+  }
+  .reset-btn:active { background:var(--line); }
+
+  /* ── 結果 ── */
+  .result-card {
+    background:var(--card);
+    border:1.5px solid var(--tea-mid);
+    border-radius:14px; padding:16px;
+    display:none; margin-top:18px;
+  }
+  .result-card.show { display:block; }
+  .result-label {
+    font-size:10px; font-weight:700; letter-spacing:.12em;
+    color:var(--tea-mid); margin-bottom:9px;
+  }
+  .result-text {
+    font-size:14px; line-height:2; color:var(--ink);
+    white-space:pre-wrap; font-weight:500;
+    background:var(--bg); border-radius:8px;
+    padding:10px 12px; margin-bottom:11px;
+    border:1px solid var(--line);
+  }
+  .copy-btn {
+    width:100%; padding:12px;
+    background:var(--green); color:#fff; border:none;
+    border-radius:10px; font-size:14px; font-weight:700;
+    font-family:inherit; cursor:pointer; transition:all .15s;
+  }
+  .copy-btn:active { opacity:.8; transform:scale(.98); }
+  .copy-btn.done { background:#2e6645; }
+
+  .hidden { display:none; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🍶 梅酒訂單管理</h1>
+  <p>填寫收件資料，選擇品項後生成員工文字</p>
+</header>
+
+<!-- 收件人 -->
+<div class="recipient-card">
+  <div class="card-title">收件人基本資料</div>
+  <div class="field-row">
+    <div class="field-label">收件人</div>
+    <input class="field-input" id="f_name" type="text" placeholder="請輸入姓名">
+  </div>
+  <div class="field-row">
+    <div class="field-label">聯絡電話</div>
+    <input class="field-input" id="f_phone" type="tel" placeholder="請輸入電話">
+  </div>
+  <div class="field-row">
+    <div class="field-label">收件地址</div>
+    <input class="field-input" id="f_addr" type="text" placeholder="請輸入地址">
+  </div>
+</div>
+
+<!-- Tab -->
+<div class="tabs">
+  <button class="tab-btn active" id="tab_single" onclick="switchTab('single')">🍾 單瓶裝</button>
+  <button class="tab-btn" id="tab_box" onclick="switchTab('box')">🎁 禮盒包裝</button>
+</div>
+
+<!-- 單瓶 -->
+<div id="panel_single">
+  <div id="single_groups"></div>
+</div>
+
+<!-- 禮盒 -->
+<div id="panel_box" class="hidden">
+  <div id="box_groups"></div>
+
+  <!-- 雙入禮盒 -->
+  <div class="dual-section">
+    <div class="dual-title">
+      雙入禮盒
+      <span class="badge">每組選 2 款口味</span>
+    </div>
+    <div id="dualSets"></div>
+    <button class="add-dual-btn" onclick="addDualSet()">＋ 新增一組雙入禮盒</button>
+  </div>
+</div>
+
+<!-- 操作 -->
+<div class="actions">
+  <button class="generate-btn" onclick="generate()">生成員工文字 ▶</button>
+  <button class="reset-btn" onclick="resetAll()">↺ 全部清零</button>
+</div>
+
+<div class="result-card" id="resultCard">
+  <div class="result-label">員工版文字</div>
+  <div class="result-text" id="resultText"></div>
+  <button class="copy-btn" id="copyBtn" onclick="copyText()">📋 複製文字</button>
+</div>
+
+<script>
+// ── 資料定義 ──────────────────────────────
+const SINGLE_GROUPS = [
+  { label:'小瓶', items:[
+    {key:'s_xy', label:'小香柚梅酒'},
+    {key:'s_tb', label:'小炭焙梅酒'},
+    {key:'s_mt', label:'小蜜桃梅酒'},
+    {key:'s_mg', label:'小玫瑰梅酒'},
+    {key:'s_df', label:'小東方梅酒'},
+  ]},
+  { label:'大瓶', items:[
+    {key:'b_xy', label:'大香柚梅酒'},
+    {key:'b_tb', label:'大炭焙梅酒'},
+    {key:'b_mt', label:'大蜜桃梅酒'},
+    {key:'b_mg', label:'大玫瑰梅酒'},
+    {key:'b_df', label:'大東方梅酒'},
+  ]},
+  { label:'經典系列', items:[
+    {key:'classic',  label:'經典梅酒'},
+    {key:'tky',      label:'鐵觀音波特梅酒'},
+  ]},
+  { label:'紅酒系列', items:[
+    {key:'blue',  label:'藍莓紅酒'},
+    {key:'cran',  label:'蔓越莓紅酒'},
+  ]},
+];
+
+const BOX_GROUPS = [
+  { label:'小瓶禮盒', items:[
+    {key:'bs_xy', label:'小香柚鉑金禮盒'},
+    {key:'bs_tb', label:'小炭焙鉑金禮盒'},
+    {key:'bs_mt', label:'小蜜桃鉑金禮盒'},
+    {key:'bs_mg', label:'小玫瑰鉑金禮盒'},
+    {key:'bs_df', label:'小東方鉑金禮盒'},
+  ]},
+  { label:'大瓶禮盒', items:[
+    {key:'bb_xy', label:'大香柚鉑金禮盒'},
+    {key:'bb_tb', label:'大炭焙鉑金禮盒'},
+    {key:'bb_mt', label:'大蜜桃鉑金禮盒'},
+    {key:'bb_mg', label:'大玫瑰鉑金禮盒'},
+    {key:'bb_df', label:'大東方鉑金禮盒'},
+  ]},
+  { label:'精選禮盒', items:[
+    {key:'bx_dj',  label:'點金禮盒'},
+    {key:'bx_tky', label:'鐵觀音波特禮盒'},
+  ]},
+];
+
+const DUAL_FLAVORS = ['香柚','炭焙','蜜桃','玫瑰','東方'];
+
+// ── 狀態 ──────────────────────────────────
+const counts = {};
+[...SINGLE_GROUPS, ...BOX_GROUPS].forEach(g => g.items.forEach(i => counts[i.key]=0));
+let dualSets = []; // [{id, flavors:[]}]
+let dualId = 0;
+let currentTab = 'single';
+
+// ── Tab 切換 ──────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('panel_single').classList.toggle('hidden', tab!=='single');
+  document.getElementById('panel_box').classList.toggle('hidden', tab!=='box');
+  document.getElementById('tab_single').classList.toggle('active', tab==='single');
+  document.getElementById('tab_box').classList.toggle('active', tab==='box');
+}
+
+// ── 渲染計數器群組 ─────────────────────────
+function renderGroups(groups, containerId) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  groups.forEach(group => {
+    const lbl = document.createElement('div');
+    lbl.className = 'group-label';
+    lbl.textContent = group.label;
+    container.appendChild(lbl);
+    const wrap = document.createElement('div');
+    wrap.className = 'items-wrap';
+    group.items.forEach(item => {
+      const val = counts[item.key];
+      const row = document.createElement('div');
+      row.className = 'item-row'+(val>0?' active':'');
+      row.innerHTML = `
+        <div class="item-name">${item.label}</div>
+        <div class="counter">
+          <button class="counter-btn" ontouchstart="" onclick="change('${item.key}',-1)">−</button>
+          <input class="counter-input${val===0?' zero':''}" type="number" inputmode="numeric" min="0"
+            value="${val===0?'':val}" placeholder="0"
+            onchange="setVal('${item.key}',this)" oninput="setVal('${item.key}',this)">
+          <button class="counter-btn" ontouchstart="" onclick="change('${item.key}',1)">＋</button>
+        </div>`;
+      wrap.appendChild(row);
+    });
+    container.appendChild(wrap);
+  });
+}
+
+function change(key, delta) {
+  counts[key] = Math.max(0, counts[key]+delta);
+  renderGroups(SINGLE_GROUPS,'single_groups');
+  renderGroups(BOX_GROUPS,'box_groups');
+  liveUpdate();
+}
+
+function setVal(key, input) {
+  const v = parseInt(input.value,10);
+  counts[key] = isNaN(v)||v<0 ? 0 : v;
+  const row = input.closest('.item-row');
+  if(row) row.classList.toggle('active', counts[key]>0);
+  input.classList.toggle('zero', counts[key]===0);
+  liveUpdate();
+}
+
+// ── 雙入禮盒 ──────────────────────────────
+function addDualSet() {
+  dualSets.push({id: dualId++, flavors:[]});
+  renderDualSets();
+}
+
+function toggleFlavor(setId, flavor) {
+  const set = dualSets.find(s=>s.id===setId);
+  if(!set) return;
+  const idx = set.flavors.indexOf(flavor);
+  if(idx > -1) {
+    set.flavors.splice(idx,1);
+  } else {
+    if(set.flavors.length >= 2) return; // 最多選2
+    set.flavors.push(flavor);
+  }
+  renderDualSets();
+  liveUpdate();
+}
+
+function removeDualSet(setId) {
+  dualSets = dualSets.filter(s=>s.id!==setId);
+  renderDualSets();
+  liveUpdate();
+}
+
+function renderDualSets() {
+  const container = document.getElementById('dualSets');
+  container.innerHTML = '';
+  dualSets.forEach((set, idx) => {
+    const div = document.createElement('div');
+    div.className = 'dual-set';
+    const selected = set.flavors.length;
+    const statusHtml = selected===2
+      ? '<span class="ok">✓ 已選好 2 款</span>'
+      : `<span class="warn">請再選 ${2-selected} 款</span>`;
+
+    div.innerHTML = `
+      <div class="dual-set-header">
+        第 ${idx+1} 組雙入禮盒
+        <button class="remove-set-btn" onclick="removeDualSet(${set.id})">✕</button>
+      </div>
+      <div class="flavor-grid">
+        ${DUAL_FLAVORS.map(f=>`
+          <div class="flavor-chip${set.flavors.includes(f)?' selected':''}"
+               onclick="toggleFlavor(${set.id},'${f}')">
+            <div class="chk">${set.flavors.includes(f)?'✓':''}</div>${f}
+          </div>`).join('')}
+      </div>
+      <div class="dual-set-footer">${statusHtml}</div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// ── 生成 ──────────────────────────────────
+function liveUpdate() {
+  if(document.getElementById('resultCard').classList.contains('show')) generate(true);
+}
+
+function generate(silent) {
+  const name  = document.getElementById('f_name').value.trim();
+  const phone = document.getElementById('f_phone').value.trim();
+  const addr  = document.getElementById('f_addr').value.trim();
+
+  const lines = [];
+
+  // 收件人
+  lines.push('收件人基本資料');
+  lines.push(`收件人：${name||'（未填）'}`);
+  lines.push(`聯絡電話：${phone||'（未填）'}`);
+  lines.push(`收件地址：${addr||'（未填）'}`);
+
+  // 單瓶
+  const singleLines = [];
+  SINGLE_GROUPS.forEach(g => g.items.forEach(i => {
+    if(counts[i.key]>0) singleLines.push(`${i.label}：${counts[i.key]}`);
+  }));
+  if(singleLines.length) {
+    lines.push('');
+    lines.push('── 單瓶裝 ──');
+    lines.push(...singleLines);
+  }
+
+  // 禮盒
+  const boxLines = [];
+  BOX_GROUPS.forEach(g => g.items.forEach(i => {
+    if(counts[i.key]>0) boxLines.push(`${i.label}：${counts[i.key]}`);
+  }));
+  // 雙入禮盒
+  const validDual = dualSets.filter(s=>s.flavors.length===2);
+  validDual.forEach((set, idx) => {
+    boxLines.push(`雙入禮盒（${set.flavors.join('＋')}）：1`);
+  });
+
+  if(boxLines.length) {
+    lines.push('');
+    lines.push('── 禮盒包裝 ──');
+    lines.push(...boxLines);
+  }
+
+  const hasContent = singleLines.length>0 || boxLines.length>0;
+  const card = document.getElementById('resultCard');
+  const textEl = document.getElementById('resultText');
+  const copyBtn = document.getElementById('copyBtn');
+
+  if(!hasContent) {
+    if(!silent) {
+      textEl.textContent = '（尚未選擇任何品項）';
+      card.classList.add('show');
+    }
+    return;
+  }
+
+  textEl.textContent = lines.join('\n');
+  card.classList.add('show');
+  copyBtn.textContent = '📋 複製文字';
+  copyBtn.classList.remove('done');
+  if(!silent) card.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function copyText() {
+  navigator.clipboard.writeText(document.getElementById('resultText').textContent).then(()=>{
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✅ 已複製！';
+    btn.classList.add('done');
+    setTimeout(()=>{ btn.textContent='📋 複製文字'; btn.classList.remove('done'); }, 2000);
+  });
+}
+
+function resetAll() {
+  [...SINGLE_GROUPS,...BOX_GROUPS].forEach(g=>g.items.forEach(i=>counts[i.key]=0));
+  dualSets = [];
+  document.getElementById('f_name').value = '';
+  document.getElementById('f_phone').value = '';
+  document.getElementById('f_addr').value = '';
+  renderGroups(SINGLE_GROUPS,'single_groups');
+  renderGroups(BOX_GROUPS,'box_groups');
+  renderDualSets();
+  document.getElementById('resultCard').classList.remove('show');
+}
+
+// ── 初始化 ────────────────────────────────
+renderGroups(SINGLE_GROUPS,'single_groups');
+renderGroups(BOX_GROUPS,'box_groups');
+renderDualSets();
+</script>
+</body>
+</html>
